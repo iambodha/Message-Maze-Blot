@@ -142,6 +142,10 @@ class Maze:
     def show_maze(self, show_solution=False):
         '''Visualize the maze'''
         Visualizer(self).show_maze(show_solution)
+    
+    def export_maze(self, show_solution=False):
+        '''Export the maze'''
+        Visualizer(self).export_maze()
 
     def save_fig(self, filename, show_solution=False):
         '''Save the maze to a file'''

@@ -71,6 +71,25 @@ class Visualizer:
                 if cell.walls['W']:
                     pygame.draw.line(self.surface, 'Black',
                                      (x, y+w), (x, y), self.thick)
+    
+    def export_maze(self):
+        maze_representation = []
+        for row in self.maze.cells:
+            maze_row = []
+            for cell in row:
+                cell_walls = [
+                    1 if cell.walls['N'] else 0,
+                    1 if cell.walls['E'] else 0,
+                    1 if cell.walls['S'] else 0,
+                    1 if cell.walls['W'] else 0
+                ]
+                maze_row.append(cell_walls)
+            maze_representation.append(maze_row)
+
+        for row in maze_representation:
+            print(row)
+
+        return maze_representation
 
     def show_maze(self, show_solution=False):
         '''Show the maze on screen'''
