@@ -85,10 +85,6 @@ class Visualizer:
                 ]
                 maze_row.append(cell_walls)
             maze_representation.append(maze_row)
-
-        for row in maze_representation:
-            print(row)
-
         return maze_representation
 
     def show_maze(self, show_solution=False):
