@@ -131,7 +131,7 @@
 </head>
 <body>
     <div class="container">
-        <a href="https://github.com/yourusername/your-repo" target="_blank" class="github-button">
+        <a href="https://github.com/iambodha" target="_blank" class="github-button">
             <i class="fab fa-github"></i> GitHub
         </a>
         <h1>Message Maze</h1>
@@ -150,8 +150,8 @@
             const copyButton = document.getElementById('copyButton');
             
             try {
-                outputElement.textContent = 'Fetching maze...';
-                const response = await fetch(`http://127.0.0.1:8000/getMaze?query=${encodeURIComponent(message)}`);
+                outputElement.textContent = 'Fetching maze... Wait uptil 1 min for API to stop sleeping';
+                const response = await fetch(`https://message-maze-blot.onrender.com/getMaze?query=${encodeURIComponent(message)}`);
                 
                 if (!response.ok) {
                     throw new Error(`HTTP error! status: ${response.status}`);
