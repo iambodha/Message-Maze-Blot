@@ -145,12 +145,41 @@
     </div>
     <script>
         async function generateMaze() {
+            const message = document.getElementById('message').value;
+            const outputElement = document.getElementById('output');
+            const copyButton = document.getElementById('copyButton');
+            
+            try {
+                outputElement.textContent = 'Fetching maze...';
+                const response = await fetch(`http://127.0.0.1:8000/getMaze?query=${encodeURIComponent(message)}`);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                outputElement.textContent = formatMazeData(data.result);
+                copyButton.classList.add('show');
+            } catch (error) {
+                console.error('Error:', error);
+                outputElement.textContent = `Error: ${error.message}`;
+                copyButton.classList.remove('show');
+            }
         }
 
         function formatMazeData(result) {
+            return JSON.stringify(result).replace(/\],\[/g, '],\n[');
         }
 
         function copyOutput() {
+            const outputElement = document.getElementById('output');
+            const textArea = document.createElement('textarea');
+            textArea.value = outputElement.textContent;
+            document.body.appendChild(textArea);
+            textArea.select();
+            document.execCommand('copy');
+            document.body.removeChild(textArea);
+            alert('Output copied to clipboard!');
         }
     </script>
 </body>
