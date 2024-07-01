@@ -46,3 +46,36 @@ function tJumpTo(cellx , celly, corner) {
     t.goTo([border + (cellx + 1) * cellSize, height - (border + celly * cellSize + cellSize)]);
   }
 }
+
+function drawMaze() {
+  t.setAngle(0);
+  for (let i = 0; i < rows; i++) {
+    for (let j = 0; j < cols; j++) {
+      const cell = grid[i][j];
+      if (cell.walls[2]) {
+        t.up();
+        tJumpTo(j,i,"bl");
+        t.down();
+        t.forward(cellSize);
+      }
+    }
+  }
+  
+  t.setAngle(-90);
+  for (let i = 0; i < rows; i++) {
+    for (let j = 0; j < cols; j++) {
+      const cell = grid[i][j];
+      if (cell.walls[1]) {
+        t.up();
+        tJumpTo(j,i,"tr");
+        t.down();
+        t.forward(cellSize);
+      }
+    }
+  }
+  
+  const Maze = t.lines();
+  drawLines(Maze);
+}
+
+drawMaze();
