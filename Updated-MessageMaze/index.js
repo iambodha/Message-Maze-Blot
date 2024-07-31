@@ -88,4 +88,69 @@ class Maze {
         const cell = this.cellAt(cellCoors.i, cellCoors.j);
         cell.highlight(p, cellSize, [255, 255, 0]);
       }
-    };
+    }
+    
+    let startX = this.start.i * cellSize + cellSize / 2;
+    let startY = this.start.j * cellSize + cellSize / 2;
+    let endX = this.end.i * cellSize + cellSize / 2;
+    let endY = this.end.j * cellSize + cellSize / 2;
+
+    // Draw start point
+    p.fill(0, 255, 0);
+    p.noStroke();
+    p.ellipse(startX, startY, cellSize / 2, cellSize / 2);
+
+    // Draw end point
+    p.fill(255, 0, 0);
+    p.noStroke();
+    p.ellipse(endX, endY, cellSize / 2, cellSize / 2);
+  }
+  exportMaze() {
+    let mazeRepresentation = [];
+    for (let j = 0; j < this.rows; j++) {
+      let mazeRow = [];
+      for (let i = 0; i < this.cols; i++) {
+        let cell = this.grid[j][i];
+        let cellWalls = [
+          cell.walls[0] ? 1 : 0,
+          cell.walls[3] ? 1 : 0,
+          cell.walls[2] ? 1 : 0,
+          cell.walls[1] ? 1 : 0
+        ];
+        mazeRow.push(cellWalls);
+      }
+      mazeRepresentation.push(mazeRow);
+    }
+
+    return mazeRepresentation;
+  }
+}
+
+class Cell {
+  constructor(i, j) {
+    this.i = i;
+    this.j = j;
+    this.walls = [true, true, true, true];
+    this.visited = false;
+  }
+
+  removeWall(neighbor) {
+    let x = this.i - neighbor.i;
+    let y = this.j - neighbor.j;
+
+    if (x === 1) {
+      this.walls[1] = false;
+      neighbor.walls[3] = false;
+    } else if (x === -1) {
+      this.walls[3] = false;
+      neighbor.walls[1] = false;
+    }
+
+    if (y === 1) {
+      this.walls[0] = false;
+      neighbor.walls[2] = false;
+    } else if (y === -1) {
+      this.walls[2] = false;
+      neighbor.walls[0] = false;
+    }
+  }
