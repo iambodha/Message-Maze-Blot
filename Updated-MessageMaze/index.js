@@ -416,3 +416,65 @@ function makeRow(charMazesList, start, end, lineWidth) {
 
   return row;
 }
+
+function rBFS(maze, reduced = 8 / 16) {
+  const n = maze.rows;
+  const m = maze.cols;
+  let queue = [];
+  const visitedPath = new Set();
+
+  if (maze.solutionCells.length === 0) {
+    queue.push(maze.startCell());
+    visitedPath[`${maze.start.i},${maze.start.j}`] = true;
+  } else {
+    for (const cell of maze.solutionCells) {
+      queue.push(maze.cellAt(cell.i, cell.j));
+      visitedPath.add(`${cell.i}-${cell.j}`);
+    }
+  }
+
+  console.log(queue.length);
+
+  shuffle(queue, true);
+  const savedQueue = queue.splice(0, Math.floor(reduced * queue.length));
+  queue = queue.slice(Math.floor(reduced * queue.length));
+
+  console.log(queue.length);
+
+  const parent = new Map();
+  while (visitedPath.size < n * m) {
+    while (queue.length > 0) {
+      const cur = queue.shift();
+      visitedPath.add(`${cur.i}-${cur.j}`);
+
+      const neighbours = maze.getNeighbors(cur);
+      shuffle(neighbours, true);
+
+      let hasUnvisitedNeighbor = false;
+      for (const cell of neighbours) {
+        const cellKey = `${cell.i}-${cell.j}`;
+        if (!visitedPath.has(cellKey)) {
+          cur.removeWall(cell);
+          queue.push(cell);
+          visitedPath.add(cellKey);
+          parent.set(cellKey, cur);
+          hasUnvisitedNeighbor = true;
+          break;
+        }
+      }
+
+      if (!hasUnvisitedNeighbor && visitedPath.size < n * m) {
+        const curKey = `${cur.i}-${cur.j}`;
+        if (parent.has(curKey)) {
+          queue.push(parent.get(curKey));
+        }
+      }
+    }
+
+    if (visitedPath.size < n * m && savedQueue.length > 0) {
+      queue.push(savedQueue.shift());
+    }
+  }
+
+  return maze;
+}
