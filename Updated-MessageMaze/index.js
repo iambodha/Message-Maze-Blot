@@ -637,3 +637,51 @@ function randomPattern(size, start, end, retryCount = 0) {
 
   return maze;
 }
+
+
+async function generateMazeListFromString(inputString) {
+  // Sanitize input string
+  inputString = inputString.replace(/[^a-zA-Z]/g, ' ').replace(/\s+/g, ' ').trim();
+
+  if (inputString.length === 0) {
+    throw new Error('Input string is empty!');
+  }
+
+  if (inputString.length > 30) {
+    throw new Error('Input string is too long! Please keep it under 30 characters.');
+  }
+
+  // Generate the maze
+  const maze = await generateMazeWithTextSolution(inputString);
+
+  // Create a list representation of the maze
+  const mazeList = maze.exportMaze();
+
+  return mazeList;
+}
+async function drawMazeFromString(hiddenMessage) {
+  try {
+    // Generate maze data from the hidden message
+    const mazeData = await generateMazeListFromString(hiddenMessage);
+
+    // Set dimensions
+    const rows = mazeData.length;
+    const cols = mazeData[0].length;
+    const cellSize = 5;
+    const border = cellSize * 5;
+    const width = cols * cellSize + 2 * border;
+    const height = rows * cellSize + 2 * border;
+    setDocDimensions(width, height);
+
+    // Prepare the grid
+    const grid = [];
+    for (let i = 0; i < rows; i++) {
+      grid[i] = [];
+      for (let j = 0; j < cols; j++) {
+        grid[i][j] = {
+          x: j,
+          y: i,
+          walls: mazeData[i][j]
+        };
+      }
+    }
