@@ -1,3 +1,9 @@
+/*
+@title: Message Maze
+@author: Iambodha
+@snapshot: HelloWorld-1.png
+*/
+
 class Maze {
   constructor(cols, rows, start = null, end = null, solutionCells = null) {
     this.cols = cols;
@@ -88,8 +94,8 @@ class Maze {
         const cell = this.cellAt(cellCoors.i, cellCoors.j);
         cell.highlight(p, cellSize, [255, 255, 0]);
       }
-    }
-    
+    };
+
     let startX = this.start.i * cellSize + cellSize / 2;
     let startY = this.start.j * cellSize + cellSize / 2;
     let endX = this.end.i * cellSize + cellSize / 2;
@@ -215,7 +221,7 @@ function combineHorizontally(mazesList) {
       throw new Error("Maze heights are not the same");
     }
   }
-  
+
   const combinedMaze = new Maze(mazeWidth, mazeHeight);
   combinedMaze.grid = mazesList[0].grid;
   let widthTemp = 0;
@@ -638,7 +644,6 @@ function randomPattern(size, start, end, retryCount = 0) {
   return maze;
 }
 
-
 async function generateMazeListFromString(inputString) {
   // Sanitize input string
   inputString = inputString.replace(/[^a-zA-Z]/g, ' ').replace(/\s+/g, ' ').trim();
@@ -685,3 +690,77 @@ async function drawMazeFromString(hiddenMessage) {
         };
       }
     }
+
+    // Initialize the turtle
+    const t = new bt.Turtle();
+
+    // Helper function to move the turtle to a specific corner of a cell
+    function tJumpTo(cellx, celly, corner) {
+      if (corner == "tl") {
+        t.goTo([border + cellx * cellSize, height - (border + celly * cellSize)]);
+      } else if (corner == "tr") {
+        t.goTo([border + (cellx + 1) * cellSize, height - (border + celly * cellSize)]);
+      } else if (corner == "bl") {
+        t.goTo([border + cellx * cellSize, height - (border + celly * cellSize + cellSize)]);
+      } else if (corner == "br") {
+        t.goTo([border + (cellx + 1) * cellSize, height - (border + celly * cellSize + cellSize)]);
+      }
+    }
+
+    // Function to draw the maze
+    function drawMaze() {
+      // Draw the outer edges
+      t.up();
+      tJumpTo(0, 0, "tl");
+      t.down();
+      t.setAngle(0);
+      t.forward(cols * cellSize);
+      t.up();
+      tJumpTo(0, 0, "bl");
+      t.down();
+      t.setAngle(270);
+      t.forward((rows - 1) * cellSize);
+      t.up();
+      t.setAngle(0);
+
+      // Draw vertical walls
+      for (let i = 0; i < rows; i++) {
+        for (let j = 0; j < cols; j++) {
+          const cell = grid[i][j];
+          if (cell.walls[2]) {
+            t.up();
+            tJumpTo(j, i, "bl");
+            t.down();
+            t.forward(cellSize);
+          }
+        }
+      }
+
+      // Draw horizontal walls
+      t.setAngle(-90);
+      for (let i = 0; i < rows; i++) {
+        for (let j = 0; j < cols; j++) {
+          const cell = grid[i][j];
+          if (cell.walls[1]) {
+            t.up();
+            tJumpTo(j, i, "tr");
+            t.down();
+            t.forward(cellSize);
+          }
+        }
+      }
+
+      // Draw the lines on the canvas
+      const Maze = t.lines();
+      drawLines(Maze);
+    }
+
+    // Execute the drawing function
+    drawMaze();
+  } catch (error) {
+    console.error("Error:", error);
+  }
+}
+
+// Call the function with the hidden message
+drawMazeFromString("HELLO");
