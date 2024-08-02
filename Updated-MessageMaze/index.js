@@ -478,3 +478,78 @@ function rBFS(maze, reduced = 8 / 16) {
 
   return maze;
 }
+
+async function generateMazeWithTextSolution(inputText) {
+  const inputTextArr = formatInput(inputText);
+
+  const charMazesLists = [];
+  for (const line of inputTextArr) {
+    const charMazes = [];
+    for (const character of line) {
+      const maze = await importPattern(character);
+      charMazes.push(maze);
+    }
+    charMazesLists.push(charMazes);
+  }
+
+  const lineWidth = Math.max(
+    ...charMazesLists.map(charMazes =>
+      charMazes.reduce((acc, charMaze) => acc + charMaze.cols, 0)
+    )
+  ) + extension;
+  const lineHeight = charMazesLists[0][0].rows;
+
+  let maze;
+
+  if (inputTextArr.length === 1) {
+    const start = { j: 0, i: 0 };
+    const end = { j: lineHeight - 1, i: lineWidth - 1 };
+    maze = makeRow(charMazesLists[0], start, end, lineWidth);
+  } else {
+    const mazesList = [];
+
+    const firstStart = { j: 0, i: 0 };
+    const firstEnd = {
+      j: lineHeight - 1,
+      i: lineWidth - Math.floor(Math.random() * (extension / 2 - 1)) - 1,
+    };
+    const firstRow = makeRow(charMazesLists[0], firstStart, firstEnd, lineWidth);
+    mazesList.push(firstRow);
+
+    let currEnd = firstEnd;
+    for (let i = 1; i < charMazesLists.length - 1; i++) {
+      let currStart, currRow;
+      currStart = { j: 0, i: currEnd.i };
+
+      if (i % 2 !== 0) {
+        currEnd = {
+          j: lineHeight - 1,
+          i: Math.floor(Math.random() * (extension / 2 - 2)),
+        };
+      } else {
+        currEnd = {
+          j: lineHeight - 1,
+          i: lineWidth - Math.floor(Math.random() * (extension / 2 - 1)) - 1,
+        };
+      }
+
+      currRow = makeRow(charMazesLists[i], currStart, currEnd, lineWidth);
+      mazesList.push(currRow);
+    }
+
+    const lastStart = { j: 0, i: currEnd.i };
+    const lastEnd = {
+      j: lineHeight - 1,
+      i: inputTextArr.length % 2 === 1 ? lineWidth - 1 : 0,
+    };
+
+    const lastRow = makeRow(charMazesLists[charMazesLists.length - 1], lastStart, lastEnd, lineWidth);
+    mazesList.push(lastRow);
+
+    maze = combineVertically(mazesList);
+  }
+
+  maze = rBFS(maze);
+
+  return maze;
+}
