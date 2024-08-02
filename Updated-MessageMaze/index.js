@@ -352,3 +352,67 @@ function formatInput(message) {
     return joinedLines.map(line => toChar(line));
   }
 }
+
+var extension = 10;
+
+async function importPattern(character) {
+  try {
+      const response = await fetch(`https://raw.githubusercontent.com/iambodha/Message-Maze-Blot/main/Updated-MessageMaze/assets/patterns/${character}.json`);
+      
+      if (!response.ok) {
+          throw new Error(`HTTP error! Status: ${response.status}`);
+      }
+
+      const jsonData = await response.json();
+      
+      const maze = Maze.fromJSON(jsonData);
+      return maze;
+  } catch (error) {
+      console.error(`Error fetching character pattern: ${error}`);
+  }
+}
+
+function makeRow(charMazesList, start, end, lineWidth) {
+  const charsMaze = combineHorizontally(charMazesList);
+
+  const leftPadding = Math.floor((lineWidth - charsMaze.cols) / 2);
+  const rightPadding = lineWidth - charsMaze.cols - leftPadding;
+  const leftMazeSize = { rows: charsMaze.rows, cols: leftPadding };
+  const rightMazeSize = { rows: charsMaze.rows, cols: rightPadding };
+
+  let leftMaze, rightMaze;
+
+  if (start.i < end.i) {
+    const leftMazeStart = start;
+    const leftMazeEnd = { j: charsMaze.startCell().j, i: leftMazeSize.cols - 1 };
+
+    leftMaze = randomPattern(leftMazeSize, leftMazeStart, leftMazeEnd);
+
+    const rightMazeStart = { j: charsMaze.endCell().j, i: 0 };
+    const rightMazeEnd = { j: end.j, i: end.i - leftMazeSize.cols - charsMaze.cols };
+
+    rightMaze = randomPattern(rightMazeSize, rightMazeStart, rightMazeEnd);
+  }
+
+  if (start.i > end.i) {
+    const leftMazeStart = { j: charsMaze.startCell().j, i: leftMazeSize.cols - 1 };
+    const leftMazeEnd = end;
+
+    leftMaze = randomPattern(leftMazeSize, leftMazeEnd, leftMazeStart);
+
+    const rightMazeStart = { j: start.j, i: start.i - leftMazeSize.cols - charsMaze.cols };
+    const rightMazeEnd = { j: charsMaze.endCell().j, i: 0 };
+
+    rightMaze = randomPattern(rightMazeSize, rightMazeEnd, rightMazeStart);
+  }
+
+  const row = combineHorizontally([leftMaze, charsMaze, rightMaze]);
+
+  if (start.i > end.i) {
+    const tmp = row.startCell();
+    row.setStart(row.endCell().i, row.endCell().j);
+    row.setEnd(tmp.i, tmp.j);
+  }
+
+  return row;
+}
