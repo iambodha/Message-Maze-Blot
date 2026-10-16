@@ -1,0 +1,9 @@
+{
+  "name": "message-maze-blot",
+  "version": "2.0.0",
+  "private": true,
+  "description": "Hidden-message mazes for the Blot pen plotter",
+  "license": "MIT",
+  "scripts": { "test": "node --test tests/*.test.js", "export": "node scripts/export-svg.js" },
+  "engines": { "node": ">=20" }
+}

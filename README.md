@@ -1,42 +1,53 @@
-# Message Maze 🌀✉️
+# Message Maze
 
-Message Maze is an innovative project designed for the Blot CNC machine, turning maze-solving into an exciting adventure to uncover hidden messages. Perfect for creating unique, personalized cards and gifts, Message Maze adds a fun twist to the classic maze by revealing a secret message when the maze is solved. Originally built using Python FastAPI and Blot hardware scripts, it has since been ported to JavaScript and now runs entirely on Blot hardware.
+A maze whose solution traces a hidden message. Designed for the [Blot pen plotter](https://github.com/hackclub/blot), combining reusable letter paths with random maze branches to make personalized, solvable drawings.
 
-## 🌟 Features
+**Upstream contribution:** the original Message Maze artwork was [merged into Hack Club's Blot repository in PR #621](https://github.com/hackclub/blot/pull/621). This repository contains the original Python-backed version and the later JavaScript port.
 
-- 🌀 **Maze generation with hidden messages**
-- 🎁 **Perfect for creating personalized cards and gifts**
-- 🤖 **Blot CNC machine integration**
-- 💻 **Built with Python FastAPI and JavaScript**
-- 🚀 **Fully functional on Blot hardware**
+![Generated HELLO WORLD maze](docs/hello-world.svg)
 
-## 🛠️ Tech Stack
+## Generate a drawing locally
 
-- **Backend**:
-  - **Python** (initial version) 🐍
-  - **JavaScript** (current version) 🌐
-- **Web Framework**: FastAPI for Python 🚀
-- **Hardware**: Blot CNC Machine 🤖
-- **Graphics**: Custom maze generation algorithms 🎨
-- **Environment Management**: Python virtual environments and Node.js 🛠️
+Node.js 20+; no packages, API keys, Python server, or network calls required for the SVG exporter.
 
-## 🎨 Maze with a Message
+```sh
+node scripts/export-svg.js "HELLO WORLD" hello-world.svg
+npm test
+```
 
-Message Maze creates intricate mazes that cleverly hide a secret message within the design. When you solve the maze, the hidden message is revealed, making it an engaging and personal way to communicate. The system is perfect for creating unique greeting cards, event invitations, or just fun puzzles.
+Open the SVG in your browser or import it into a vector/plotting tool. Start at the opening in the top-left cell and follow the maze to the opening on the bottom edge. Outputs are random, so successive drawings differ. Existing output files are never overwritten silently; choose a new filename.
 
-## 🤝 Contributing
+Messages accept A–Z and spaces, up to **30 characters after normalization**. Lowercase is converted to uppercase; punctuation and digits become spaces. Empty messages are rejected. Words wrap at 14 characters where possible, with long words kept intact.
 
-Contributions are welcome! Please feel free to submit a Pull Request. 🙌
+## Draw with Blot
 
-## 📄 License
+1. Open the [Blot editor](https://blot.hackclub.com/editor).
+2. Paste `V2/index.js` into the editor.
+3. Change `drawMazeFromString("HELLO")` at the bottom to your message and run it.
+4. Inspect dimensions and the generated preview before plotting.
 
-This project is licensed under the [MIT License](LICENSE).
+The standalone Blot script downloads letter patterns from `V2/assets/patterns` on this repository's `main` branch, so this route requires an internet connection. The local SVG exporter loads the same assets from disk and uses the same generation algorithm. A maintenance PR's local changes become available to that hosted script after merging.
 
-## 🙏 Acknowledgments
+## How it works
 
-- **Blot CNC Community** for support and inspiration 🤖
-- **FastAPI and JavaScript** for enabling smooth development 🛠️
+1. Normalize the phrase and arrange letters into rows.
+2. Load each letter's predesigned solution path and insert separator/space patterns.
+3. Join rows in alternating directions, adding randomized padding paths.
+4. Grow maze branches around the protected message path.
+5. Render walls as Blot turtle strokes or an SVG with an entrance and exit.
 
----
+The tests check letter availability, word preservation, reciprocal walls, whole-maze connectivity, and continuity of the protected solution, including multi-line messages. They also cover invalid input and asset-download errors. CI generates a downloadable SVG artifact.
 
-Turn every maze into a message with Message Maze—where puzzles meet personalization! 🌀✨
+## Repository map
+
+| Path | Purpose |
+| --- | --- |
+| `V2/index.js` | Current JavaScript generator and Blot entry point |
+| `V2/assets/patterns/` | Letter, separator, and space patterns |
+| `scripts/export-svg.js` | Dependency-free local SVG exporter |
+| `V1/` | Historical FastAPI/Python implementation, drawing tools, and snapshots |
+| `V2/temp.js` | Historical development experiment; use `V2/index.js` |
+
+The V1 Python implementation is retained for its algorithm history. Its pickle assets are project data; use only trusted files when running that legacy workflow. New development should start with V2.
+
+[MIT License](LICENSE). Built by [Bodha](https://github.com/iambodha), with thanks to the Hack Club Blot community.
