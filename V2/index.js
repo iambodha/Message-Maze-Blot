@@ -315,67 +315,28 @@ function toChar(strLine) {
 }
 
 function formatInput(message) {
-  const wordsList = message.toUpperCase().split(' ');
-  const wordsLength = wordsList.map(word => word.length);
-  const numWords = wordsList.length;
-  const linesList = [];
-  const maxLine = 14;
-  let count = 0;
-  let currentLine = [];
-
-  if (numWords === 1) {
-    return [toChar(wordsList[0])];
-  } else {
-    for (let i = 0; i < numWords; i++) {
-      count = count + wordsLength[i] + 1;
-
-      if (count <= maxLine) {
-        currentLine.push(wordsList[i]);
-      } else if (wordsList[i].length >= maxLine) {
-        if (i !== 0 && wordsList[i - 1].length < maxLine) {
-          linesList.push(currentLine);
-        }
-        linesList.push([wordsList[i]]);
-        count = 0;
-      } else {
-        linesList.push(currentLine);
-        currentLine = [wordsList[i]];
-        count = wordsLength[i];
-      }
-
-      if (i === numWords - 1 && count === maxLine) {
-        linesList.push(currentLine);
-      }
-
-      if (i === numWords - 1 && count < maxLine) {
-        if (wordsList[i].length < maxLine) {
-          linesList.push(currentLine);
-        }
-      }
+  // Greedy word wrapping preserves every word, including words >= 14 letters.
+  const lines = [];
+  let line = '';
+  for (const word of message.toUpperCase().split(' ')) {
+    if (line && line.length + 1 + word.length > 14) {
+      lines.push(toChar(line));
+      line = '';
     }
-
-    const joinedLines = linesList.map(line => line.join(' '));
-    return joinedLines.map(line => toChar(line));
+    line += (line ? ' ' : '') + word;
   }
+  if (line) lines.push(toChar(line));
+  return lines;
 }
 
 var extension = 10;
 
 async function importPattern(character) {
-  try {
-      const response = await fetch(`https://raw.githubusercontent.com/iambodha/Message-Maze-Blot/main/Updated-MessageMaze/assets/patterns/${character}.json`);
-      
-      if (!response.ok) {
-          throw new Error(`HTTP error! Status: ${response.status}`);
-      }
-
-      const jsonData = await response.json();
-      
-      const maze = Maze.fromJSON(jsonData);
-      return maze;
-  } catch (error) {
-      console.error(`Error fetching character pattern: ${error}`);
+  const response = await fetch(`https://raw.githubusercontent.com/iambodha/Message-Maze-Blot/main/V2/assets/patterns/${character}.json`);
+  if (!response.ok) {
+    throw new Error(`Unable to load pattern ${character}: HTTP ${response.status}`);
   }
+  return Maze.fromJSON(await response.json());
 }
 
 function makeRow(charMazesList, start, end, lineWidth) {
@@ -418,6 +379,7 @@ function makeRow(charMazesList, start, end, lineWidth) {
     const tmp = row.startCell();
     row.setStart(row.endCell().i, row.endCell().j);
     row.setEnd(tmp.i, tmp.j);
+    row.solutionCells.reverse();
   }
 
   return row;
@@ -431,7 +393,7 @@ function rBFS(maze, reduced = 8 / 16) {
 
   if (maze.solutionCells.length === 0) {
     queue.push(maze.startCell());
-    visitedPath[`${maze.start.i},${maze.start.j}`] = true;
+    visitedPath.add(`${maze.start.i}-${maze.start.j}`);
   } else {
     for (const cell of maze.solutionCells) {
       queue.push(maze.cellAt(cell.i, cell.j));
@@ -439,13 +401,11 @@ function rBFS(maze, reduced = 8 / 16) {
     }
   }
 
-  console.log(queue.length);
 
   shuffle(queue, true);
   const savedQueue = queue.splice(0, Math.floor(reduced * queue.length));
-  queue = queue.slice(Math.floor(reduced * queue.length));
 
-  console.log(queue.length);
+
 
   const parent = new Map();
   while (visitedPath.size < n * m) {
@@ -485,14 +445,14 @@ function rBFS(maze, reduced = 8 / 16) {
   return maze;
 }
 
-async function generateMazeWithTextSolution(inputText) {
+async function generateMazeWithTextSolution(inputText, patternLoader = importPattern) {
   const inputTextArr = formatInput(inputText);
 
   const charMazesLists = [];
   for (const line of inputTextArr) {
     const charMazes = [];
     for (const character of line) {
-      const maze = await importPattern(character);
+      const maze = await patternLoader(character);
       charMazes.push(maze);
     }
     charMazesLists.push(charMazes);
@@ -644,7 +604,7 @@ function randomPattern(size, start, end, retryCount = 0) {
   return maze;
 }
 
-async function generateMazeListFromString(inputString) {
+async function generateMazeFromString(inputString, patternLoader = importPattern) {
   // Sanitize input string
   inputString = inputString.replace(/[^a-zA-Z]/g, ' ').replace(/\s+/g, ' ').trim();
 
@@ -653,17 +613,16 @@ async function generateMazeListFromString(inputString) {
   }
 
   if (inputString.length > 30) {
-    throw new Error('Input string is too long! Please keep it under 30 characters.');
+    throw new Error('Input string is too long! Please keep it to 30 characters or fewer.');
   }
 
   // Generate the maze
-  const maze = await generateMazeWithTextSolution(inputString);
-
-  // Create a list representation of the maze
-  const mazeList = maze.exportMaze();
-
-  return mazeList;
+  return generateMazeWithTextSolution(inputString, patternLoader);
 }
+async function generateMazeListFromString(inputString, patternLoader = importPattern) {
+  return (await generateMazeFromString(inputString, patternLoader)).exportMaze();
+}
+
 async function drawMazeFromString(hiddenMessage) {
   try {
     // Generate maze data from the hidden message
@@ -763,4 +722,8 @@ async function drawMazeFromString(hiddenMessage) {
 }
 
 // Call the function with the hidden message
-drawMazeFromString("HELLO");
+if (typeof module !== 'undefined' && module.exports) {
+  module.exports = { Maze, formatInput, generateMazeFromString, generateMazeWithTextSolution, generateMazeListFromString, importPattern };
+} else {
+  drawMazeFromString("HELLO");
+}
